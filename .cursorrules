@@ -1,0 +1,2 @@
+Always read, strictly follow, and adhere to the architectural constraints defined in /ai-rules/PROJECT_SPEC.md before generating or editing code.
+For any frontend, layout, styling, or component task, strictly follow /ai-rules/FRONTEND_RULES.md.
