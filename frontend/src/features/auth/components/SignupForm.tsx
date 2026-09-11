@@ -5,19 +5,29 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { User, Mail, Lock, Eye, EyeOff, AlertCircle, CheckCircle2, Loader2 } from "lucide-react";
-import { signUpAction, type AuthActionResult } from "../actions/auth.actions";
+import { signUpAction, checkEmailExistsAction, type AuthActionResult } from "../actions/auth.actions";
 import type { SupportedLocale } from "@/types/i18n";
 import { ROUTES } from "@/constants/routes";
 import { analytics } from "@/lib/analytics";
 
 interface SignupFormProps {
   readonly locale: SupportedLocale;
+  readonly initialEmail?: string;
 }
 
-export default function SignupForm({ locale }: SignupFormProps) {
+export default function SignupForm({ locale, initialEmail = "" }: SignupFormProps) {
   const t = useTranslations("auth");
   const router = useRouter();
   const [showPassword, setShowPassword] = useState(false);
+  const [email, setEmail] = useState(initialEmail);
+  const [clientError, setClientError] = useState<string | null>(null);
+  const [emailError, setEmailError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (initialEmail) {
+      setEmail(initialEmail);
+    }
+  }, [initialEmail]);
 
   const [state, formAction, isPending] = useActionState<
     AuthActionResult | null,
@@ -30,6 +40,74 @@ export default function SignupForm({ locale }: SignupFormProps) {
       router.refresh();
     }
   }, [state, router]);
+
+  const handleEmailBlur = async (e: React.FocusEvent<HTMLInputElement>) => {
+    const rawEmail = e.target.value.replace(/[\u200B-\u200D\uFEFF\u00A0]/g, "").trim();
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(rawEmail)) return;
+
+    try {
+      const exists = await checkEmailExistsAction(rawEmail);
+      if (exists) {
+        setEmailError(
+          locale === "es"
+            ? "Este correo ya está registrado. Por favor inicia sesión."
+            : "This email is already registered. Please sign in."
+        );
+      } else {
+        setEmailError(null);
+      }
+    } catch {
+      // Non-blocking
+    }
+  };
+
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    analytics.authSubmit({ type: "signup", locale });
+
+    const form = e.currentTarget;
+    const formData = new FormData(form);
+    const firstName = ((formData.get("firstName") as string) || "").trim();
+    const lastName = ((formData.get("lastName") as string) || "").trim();
+    const rawEmail = ((formData.get("email") as string) || "")
+      .replace(/[\u200B-\u200D\uFEFF\u00A0]/g, "")
+      .trim();
+    const password = (formData.get("password") as string) || "";
+    const confirmPassword = (formData.get("confirmPassword") as string) || "";
+
+    if (firstName.length < 2) {
+      e.preventDefault();
+      setClientError(locale === "es" ? "El nombre debe tener al menos 2 caracteres" : "First name must be at least 2 characters");
+      return;
+    }
+
+    if (lastName.length < 2) {
+      e.preventDefault();
+      setClientError(locale === "es" ? "Los apellidos deben tener al menos 2 caracteres" : "Last name must be at least 2 characters");
+      return;
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(rawEmail)) {
+      e.preventDefault();
+      setClientError(locale === "es" ? "Introduce un correo electrónico válido" : "Invalid email address");
+      return;
+    }
+
+    if (password.length < 8) {
+      e.preventDefault();
+      setClientError(locale === "es" ? "La contraseña debe tener al menos 8 caracteres" : "Password must be at least 8 characters");
+      return;
+    }
+
+    if (password !== confirmPassword) {
+      e.preventDefault();
+      setClientError(locale === "es" ? "Las contraseñas no coinciden" : "Passwords do not match");
+      return;
+    }
+
+    setClientError(null);
+  };
 
   // When email confirmation is required
   if (state?.success && state.message === "signup_pending_confirmation") {
@@ -56,44 +134,78 @@ export default function SignupForm({ locale }: SignupFormProps) {
     );
   }
 
+  const displayedError = clientError || state?.error;
+
   return (
     <form
+      noValidate
       action={formAction}
-      onSubmit={() => analytics.authSubmit({ type: "signup", locale })}
+      onSubmit={handleSubmit}
       className="space-y-3.5"
     >
       <input type="hidden" name="locale" value={locale} />
 
       {/* Error Alert */}
-      {state?.error && (
+      {displayedError && (
         <div
           role="alert"
           className="flex items-center gap-2 rounded-2xl border border-rose-500/30 bg-rose-500/10 p-3.5 text-xs font-semibold text-rose-400"
         >
           <AlertCircle className="h-4 w-4 shrink-0" />
-          <span>{state.error}</span>
+          <span>{displayedError}</span>
         </div>
       )}
 
-      {/* Full Name Input */}
-      <div className="space-y-1.5">
-        <label
-          htmlFor="signup-fullName"
-          className="block text-xs font-bold uppercase tracking-wider text-slate-300"
-        >
-          {t("fullNameLabel")}
-        </label>
-        <div className="relative">
-          <User className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500" />
-          <input
-            id="signup-fullName"
-            name="fullName"
-            type="text"
-            required
-            autoComplete="name"
-            placeholder={t("fullNamePlaceholder")}
-            className="w-full rounded-2xl border border-slate-800 bg-slate-950/70 py-3 pl-10 pr-4 text-xs font-medium text-slate-100 placeholder-slate-500 outline-none transition-all focus:border-amber-500/80 focus:ring-2 focus:ring-amber-500/20"
-          />
+      {/* Name Fields: First Name & Last Name */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        {/* First Name Input */}
+        <div className="space-y-1.5">
+          <label
+            htmlFor="signup-firstName"
+            className="block text-xs font-bold uppercase tracking-wider text-slate-300"
+          >
+            {t("firstNameLabel")}
+          </label>
+          <div className="relative">
+            <User className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500" />
+            <input
+              id="signup-firstName"
+              name="firstName"
+              type="text"
+              required
+              autoComplete="given-name"
+              autoCapitalize="words"
+              spellCheck={false}
+              onChange={() => setClientError(null)}
+              placeholder={t("firstNamePlaceholder")}
+              className="w-full rounded-2xl border border-slate-800 bg-slate-950/70 py-3 pl-10 pr-4 text-xs font-medium text-slate-100 placeholder-slate-500 outline-none transition-all focus:border-amber-500/80 focus:ring-2 focus:ring-amber-500/20"
+            />
+          </div>
+        </div>
+
+        {/* Last Name Input */}
+        <div className="space-y-1.5">
+          <label
+            htmlFor="signup-lastName"
+            className="block text-xs font-bold uppercase tracking-wider text-slate-300"
+          >
+            {t("lastNameLabel")}
+          </label>
+          <div className="relative">
+            <User className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500" />
+            <input
+              id="signup-lastName"
+              name="lastName"
+              type="text"
+              required
+              autoComplete="family-name"
+              autoCapitalize="words"
+              spellCheck={false}
+              onChange={() => setClientError(null)}
+              placeholder={t("lastNamePlaceholder")}
+              className="w-full rounded-2xl border border-slate-800 bg-slate-950/70 py-3 pl-10 pr-4 text-xs font-medium text-slate-100 placeholder-slate-500 outline-none transition-all focus:border-amber-500/80 focus:ring-2 focus:ring-amber-500/20"
+            />
+          </div>
         </div>
       </div>
 
@@ -111,12 +223,45 @@ export default function SignupForm({ locale }: SignupFormProps) {
             id="signup-email"
             name="email"
             type="email"
+            inputMode="email"
             required
-            autoComplete="email"
+            autoComplete="username"
+            autoCapitalize="none"
+            autoCorrect="off"
+            spellCheck={false}
+            value={email}
+            onBlur={handleEmailBlur}
+            onChange={(e) => {
+              setEmail(e.target.value);
+              setClientError(null);
+              setEmailError(null);
+            }}
             placeholder={t("emailPlaceholder")}
-            className="w-full rounded-2xl border border-slate-800 bg-slate-950/70 py-3 pl-10 pr-4 text-xs font-medium text-slate-100 placeholder-slate-500 outline-none transition-all focus:border-amber-500/80 focus:ring-2 focus:ring-amber-500/20"
+            className={`w-full rounded-2xl border bg-slate-950/70 py-3 pl-10 pr-4 text-xs font-medium text-slate-100 placeholder-slate-500 outline-none transition-all ${
+              emailError
+                ? "border-rose-500/80 focus:border-rose-500 focus:ring-2 focus:ring-rose-500/20"
+                : "border-slate-800 focus:border-amber-500/80 focus:ring-2 focus:ring-amber-500/20"
+            }`}
           />
         </div>
+        {emailError && (
+          <div role="alert" className="flex items-center justify-between text-[11px] font-medium text-rose-400 pt-0.5">
+            <span className="flex items-center gap-1.5">
+              <AlertCircle className="h-3 w-3 shrink-0" />
+              <span>{emailError}</span>
+            </span>
+            <Link
+              href={
+                email.trim()
+                  ? `${ROUTES.LOGIN(locale)}?email=${encodeURIComponent(email.trim())}`
+                  : ROUTES.LOGIN(locale)
+              }
+              className="text-amber-400 font-bold hover:text-amber-300 transition-colors ml-2 shrink-0 underline"
+            >
+              {t("submitLogin")}
+            </Link>
+          </div>
+        )}
       </div>
 
       {/* Password Input */}
@@ -195,7 +340,11 @@ export default function SignupForm({ locale }: SignupFormProps) {
       <div className="pt-2 text-center text-xs text-slate-400">
         <span>{t("haveAccount")}{" "}</span>
         <Link
-          href={ROUTES.LOGIN(locale)}
+          href={
+            email.trim()
+              ? `${ROUTES.LOGIN(locale)}?email=${encodeURIComponent(email.trim())}`
+              : ROUTES.LOGIN(locale)
+          }
           className="font-bold text-amber-400 hover:text-amber-300 transition-colors"
         >
           {t("submitLogin")}

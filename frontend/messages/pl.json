@@ -101,6 +101,10 @@
     "signInButton": "Zaloguj",
     "myAccount": "Moje Konto",
     "roleOrganizer": "Organizator",
-    "roleAdmin": "Administrator"
+    "roleAdmin": "Administrator",
+    "firstNameLabel": "Imię (imiona)",
+    "firstNamePlaceholder": "np. Maya",
+    "lastNameLabel": "Nazwisko",
+    "lastNamePlaceholder": "np. Rodriguez Gomez"
   }
 }

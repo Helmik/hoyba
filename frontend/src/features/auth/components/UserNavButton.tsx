@@ -2,8 +2,9 @@
 
 import { useEffect, useState, useRef } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
-import { User, LogOut, ShieldCheck, ChevronDown } from "lucide-react";
+import { User, LogOut, ShieldCheck, ChevronDown, Loader2 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { signOutAction } from "../actions/auth.actions";
 import type { SupportedLocale } from "@/types/i18n";
@@ -17,9 +18,11 @@ interface UserNavButtonProps {
 
 export default function UserNavButton({ locale }: UserNavButtonProps) {
   const t = useTranslations("auth");
+  const router = useRouter();
   const [user, setUser] = useState<SupabaseUser | null>(null);
   const [profileRole, setProfileRole] = useState<string | null>(null);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [isSigningOut, setIsSigningOut] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -132,15 +135,37 @@ export default function UserNavButton({ locale }: UserNavButtonProps) {
           <div className="pt-1">
             <button
               type="button"
-              onClick={() => {
-                setMenuOpen(false);
-                analytics.authSubmit({ type: "signout", locale });
-                signOutAction(locale);
+              disabled={isSigningOut}
+              onClick={async () => {
+                try {
+                  setIsSigningOut(true);
+                  analytics.authSubmit({ type: "signout", locale });
+                  const supabase = createClient();
+                  await supabase.auth.signOut();
+                  await signOutAction(locale);
+                  setUser(null);
+                  setMenuOpen(false);
+                  router.push(ROUTES.HOME(locale));
+                  router.refresh();
+                } catch (err) {
+                  console.error("Failed to sign out:", err);
+                } finally {
+                  setIsSigningOut(false);
+                }
               }}
-              className="flex min-h-[44px] w-full items-center gap-2 rounded-xl px-3 text-left text-xs font-semibold text-rose-400 hover:bg-rose-500/10 transition-colors"
+              className="flex min-h-[44px] w-full items-center gap-2 rounded-xl px-3 text-left text-xs font-semibold text-rose-400 hover:bg-rose-500/10 transition-colors disabled:opacity-60"
             >
-              <LogOut className="h-3.5 w-3.5" />
-              <span>{t("logout")}</span>
+              {isSigningOut ? (
+                <>
+                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                  <span>{t("logout")}...</span>
+                </>
+              ) : (
+                <>
+                  <LogOut className="h-3.5 w-3.5" />
+                  <span>{t("logout")}</span>
+                </>
+              )}
             </button>
           </div>
         </div>

@@ -24,7 +24,8 @@ export const LoginSchema = z.object({
 
 export const SignupSchema = z
   .object({
-    fullName: z.string().trim().min(2, "Full name must be at least 2 characters"),
+    firstName: z.string().trim().min(2, "First name must be at least 2 characters"),
+    lastName: z.string().trim().min(2, "Last name must be at least 2 characters"),
     email: emailValidator,
     password: z.string().min(8, "Password must be at least 8 characters"),
     confirmPassword: z.string().min(8, "Password must be at least 8 characters"),

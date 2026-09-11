@@ -6,6 +6,7 @@ import {
   SignupSchema,
   ForgotPasswordSchema,
   ResetPasswordSchema,
+  cleanEmail,
 } from "../schemas/auth.schema";
 import type { SupportedLocale } from "@/types/i18n";
 import { ROUTES } from "@/constants/routes";
@@ -24,6 +25,18 @@ function localizeAuthError(errorMessage: string, locale: SupportedLocale): strin
   const isEs = locale === "es";
   const lower = errorMessage.toLowerCase();
 
+  if (lower.includes("first name must be at least 2 characters")) {
+    return isEs ? "El nombre debe tener al menos 2 caracteres" : "First name must be at least 2 characters";
+  }
+  if (lower.includes("last name must be at least 2 characters")) {
+    return isEs ? "Los apellidos deben tener al menos 2 caracteres" : "Last name must be at least 2 characters";
+  }
+  if (lower.includes("passwords do not match")) {
+    return isEs ? "Las contraseñas no coinciden" : "Passwords do not match";
+  }
+  if (lower.includes("password must be at least 8 characters")) {
+    return isEs ? "La contraseña debe tener al menos 8 caracteres" : "Password must be at least 8 characters";
+  }
   if (lower.includes("invalid login credentials")) {
     return isEs ? "Correo o contraseña incorrectos" : "Invalid email or password";
   }
@@ -33,8 +46,14 @@ function localizeAuthError(errorMessage: string, locale: SupportedLocale): strin
   if (lower.includes("invalid email")) {
     return isEs ? "Introduce un correo electrónico válido" : "Invalid email address";
   }
-  if (lower.includes("user already registered")) {
-    return isEs ? "Este correo ya está registrado" : "User already registered";
+  if (
+    lower.includes("user already registered") ||
+    lower.includes("already registered") ||
+    lower.includes("already been registered")
+  ) {
+    return isEs
+      ? "Este correo electrónico ya está registrado. Por favor inicia sesión."
+      : "This email is already registered. Please sign in.";
   }
   if (lower.includes("password is required")) {
     return isEs ? "Introduce tu contraseña" : "Password is required";
@@ -43,6 +62,27 @@ function localizeAuthError(errorMessage: string, locale: SupportedLocale): strin
     return isEs ? "Demasiados intentos. Espera unos momentos." : "Too many attempts. Please try again later.";
   }
   return errorMessage;
+}
+
+/**
+ * Checks whether an email address is already registered in the profiles database.
+ */
+export async function checkEmailExistsAction(rawEmail: string): Promise<boolean> {
+  const email = cleanEmail(rawEmail);
+  if (!email || !email.includes("@")) return false;
+
+  try {
+    const supabase = await createClient();
+    const { data } = await supabase
+      .from("profiles")
+      .select("id")
+      .eq("contact_email", email)
+      .maybeSingle();
+
+    return !!data;
+  } catch {
+    return false;
+  }
 }
 
 /**
@@ -109,27 +149,46 @@ export async function signUpAction(
   prevState: AuthActionResult | null,
   formData: FormData
 ): Promise<AuthActionResult> {
-  const rawFullName = formData.get("fullName");
+  const rawFirstName = formData.get("firstName");
+  const rawLastName = formData.get("lastName");
   const rawEmail = formData.get("email");
   const rawPassword = formData.get("password");
   const rawConfirmPassword = formData.get("confirmPassword");
   const locale = (formData.get("locale") as SupportedLocale) || "en";
 
   const parsed = SignupSchema.safeParse({
-    fullName: rawFullName,
+    firstName: rawFirstName,
+    lastName: rawLastName,
     email: rawEmail,
     password: rawPassword,
     confirmPassword: rawConfirmPassword,
   });
 
   if (!parsed.success) {
+    const issue = parsed.error.issues[0]?.message || "Validation failed";
     return {
       success: false,
-      error: parsed.error.issues[0]?.message || "Validation failed",
+      error: localizeAuthError(issue, locale),
     };
   }
 
+  const fullName = `${parsed.data.firstName} ${parsed.data.lastName}`.trim();
   const supabase = await createClient();
+
+  // 1. Direct validation: verify email has not been registered before in profiles
+  const { data: existingProfile } = await supabase
+    .from("profiles")
+    .select("id")
+    .eq("contact_email", parsed.data.email)
+    .maybeSingle();
+
+  if (existingProfile) {
+    return {
+      success: false,
+      error: localizeAuthError("User already registered", locale),
+    };
+  }
+
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
   const callbackUrl = `${siteUrl}${ROUTES.AUTH_CALLBACK(locale)}?next=${encodeURIComponent(
     ROUTES.HOME(locale)
@@ -140,7 +199,10 @@ export async function signUpAction(
     password: parsed.data.password,
     options: {
       data: {
-        full_name: parsed.data.fullName,
+        first_name: parsed.data.firstName,
+        last_name: parsed.data.lastName,
+        full_name: fullName,
+        name: fullName,
         role: "organizer",
       },
       emailRedirectTo: callbackUrl,
@@ -155,7 +217,15 @@ export async function signUpAction(
     });
     return {
       success: false,
-      error: error.message,
+      error: localizeAuthError(error.message, locale),
+    };
+  }
+
+  // 2. Supabase Auth enumeration protection detection: existing user returns empty identities array
+  if (data.user && Array.isArray(data.user.identities) && data.user.identities.length === 0) {
+    return {
+      success: false,
+      error: localizeAuthError("User already registered", locale),
     };
   }
 
@@ -281,7 +351,7 @@ export async function signOutAction(locale: SupportedLocale = "en") {
   const supabase = await createClient();
   await supabase.auth.signOut();
   revalidatePath("/", "layout");
-  redirect(ROUTES.HOME(locale));
+  return { success: true, redirectTo: ROUTES.HOME(locale) };
 }
 
 /**

@@ -12,18 +12,26 @@ import { analytics } from "@/lib/analytics";
 
 interface LoginFormProps {
   readonly locale: SupportedLocale;
+  readonly initialEmail?: string;
   readonly messageFromQuery?: string;
 }
 
 export default function LoginForm({
   locale,
+  initialEmail,
   messageFromQuery,
 }: LoginFormProps) {
   const t = useTranslations("auth");
   const router = useRouter();
   const [showPassword, setShowPassword] = useState(false);
-
+  const [email, setEmail] = useState(initialEmail || "");
   const [emailError, setEmailError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (initialEmail) {
+      setEmail(initialEmail);
+    }
+  }, [initialEmail]);
 
   const [state, formAction, isPending] = useActionState<
     AuthActionResult | null,
@@ -114,7 +122,11 @@ export default function LoginForm({
             autoCapitalize="none"
             autoCorrect="off"
             spellCheck={false}
-            onChange={() => setEmailError(null)}
+            value={email}
+            onChange={(e) => {
+              setEmail(e.target.value);
+              setEmailError(null);
+            }}
             placeholder={t("emailPlaceholder")}
             className={`w-full rounded-2xl border bg-slate-950/70 py-3 pl-10 pr-4 text-xs font-medium text-slate-100 placeholder-slate-500 outline-none transition-all ${
               emailError
@@ -141,7 +153,11 @@ export default function LoginForm({
             {t("passwordLabel")}
           </label>
           <Link
-            href={ROUTES.FORGOT_PASSWORD(locale)}
+            href={
+              email.trim()
+                ? `${ROUTES.FORGOT_PASSWORD(locale)}?email=${encodeURIComponent(email.trim())}`
+                : ROUTES.FORGOT_PASSWORD(locale)
+            }
             className="text-[11px] font-semibold text-amber-400 hover:text-amber-300 transition-colors"
           >
             {t("forgotPasswordLink")}
@@ -193,7 +209,11 @@ export default function LoginForm({
       <div className="pt-2 text-center text-xs text-slate-400">
         <span>{t("noAccount")}{" "}</span>
         <Link
-          href={ROUTES.SIGNUP(locale)}
+          href={
+            email.trim()
+              ? `${ROUTES.SIGNUP(locale)}?email=${encodeURIComponent(email.trim())}`
+              : ROUTES.SIGNUP(locale)
+          }
           className="font-bold text-amber-400 hover:text-amber-300 transition-colors"
         >
           {t("submitSignup")}

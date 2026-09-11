@@ -101,6 +101,10 @@
     "signInButton": "Accedi",
     "myAccount": "Il Mio Account",
     "roleOrganizer": "Organizzatore",
-    "roleAdmin": "Amministratore"
+    "roleAdmin": "Amministratore",
+    "firstNameLabel": "Nome(i)",
+    "firstNamePlaceholder": "Es. Maya",
+    "lastNameLabel": "Cognome(i)",
+    "lastNamePlaceholder": "Es. Rodriguez Gomez"
   }
 }

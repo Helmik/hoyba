@@ -101,6 +101,10 @@
     "signInButton": "Entrar",
     "myAccount": "Minha Conta",
     "roleOrganizer": "Organizador",
-    "roleAdmin": "Administrador"
+    "roleAdmin": "Administrador",
+    "firstNameLabel": "Nome(s)",
+    "firstNamePlaceholder": "Ex. Maya",
+    "lastNameLabel": "Sobrenome(s)",
+    "lastNamePlaceholder": "Ex. Rodriguez Gomez"
   }
 }

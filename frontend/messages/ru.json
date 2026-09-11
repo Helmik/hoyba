@@ -101,6 +101,10 @@
     "signInButton": "Войти",
     "myAccount": "Мой Аккаунт",
     "roleOrganizer": "Организатор",
-    "roleAdmin": "Администратор"
+    "roleAdmin": "Администратор",
+    "firstNameLabel": "Имя",
+    "firstNamePlaceholder": "Напр. Майя",
+    "lastNameLabel": "Фамилия",
+    "lastNamePlaceholder": "Напр. Родригес"
   }
 }

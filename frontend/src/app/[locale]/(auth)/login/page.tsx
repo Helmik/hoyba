@@ -23,10 +23,10 @@ export default async function LoginPage({
   searchParams,
 }: {
   params: Promise<{ locale: string }>;
-  searchParams: Promise<{ reset?: string }>;
+  searchParams: Promise<{ reset?: string; email?: string }>;
 }) {
   const { locale } = await params;
-  const { reset } = await searchParams;
+  const { reset, email } = (await searchParams) || {};
   setRequestLocale(locale);
 
   const t = await getTranslations({ locale, namespace: "auth" });
@@ -41,6 +41,7 @@ export default async function LoginPage({
       >
         <LoginForm
           locale={locale as SupportedLocale}
+          initialEmail={email}
           messageFromQuery={reset === "success" ? "reset_success" : undefined}
         />
       </AuthCard>

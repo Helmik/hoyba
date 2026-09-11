@@ -101,6 +101,10 @@
     "signInButton": "Inloggen",
     "myAccount": "Mijn Account",
     "roleOrganizer": "Organisator",
-    "roleAdmin": "Beheerder"
+    "roleAdmin": "Beheerder",
+    "firstNameLabel": "Voornaam(en)",
+    "firstNamePlaceholder": "bijv. Maya",
+    "lastNameLabel": "Achternaam(-namen)",
+    "lastNamePlaceholder": "bijv. Rodriguez Gomez"
   }
 }

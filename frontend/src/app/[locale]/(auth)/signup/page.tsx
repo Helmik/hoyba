@@ -20,10 +20,13 @@ export async function generateMetadata({
 
 export default async function SignupPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ locale: string }>;
+  searchParams?: Promise<{ email?: string }>;
 }) {
   const { locale } = await params;
+  const { email } = (await searchParams) || {};
   setRequestLocale(locale);
 
   const t = await getTranslations({ locale, namespace: "auth" });
@@ -36,7 +39,10 @@ export default async function SignupPage({
         locale={locale as SupportedLocale}
         backLabel={t("backToHome")}
       >
-        <SignupForm locale={locale as SupportedLocale} />
+        <SignupForm
+          locale={locale as SupportedLocale}
+          initialEmail={email}
+        />
       </AuthCard>
     </main>
   );

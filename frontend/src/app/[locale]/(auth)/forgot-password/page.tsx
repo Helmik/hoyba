@@ -20,10 +20,13 @@ export async function generateMetadata({
 
 export default async function ForgotPasswordPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ locale: string }>;
+  searchParams: Promise<{ email?: string }>;
 }) {
   const { locale } = await params;
+  const { email } = (await searchParams) || {};
   setRequestLocale(locale);
 
   const t = await getTranslations({ locale, namespace: "auth" });
@@ -36,7 +39,7 @@ export default async function ForgotPasswordPage({
         locale={locale as SupportedLocale}
         backLabel={t("backToHome")}
       >
-        <ForgotPasswordForm locale={locale as SupportedLocale} />
+        <ForgotPasswordForm locale={locale as SupportedLocale} initialEmail={email} />
       </AuthCard>
     </main>
   );
