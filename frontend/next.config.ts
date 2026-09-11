@@ -28,8 +28,16 @@ export default withSentryConfig(withNextIntl(nextConfig), {
 
   project: "hoyba",
 
+  // Auth token for uploading source maps
+  authToken: process.env.SENTRY_AUTH_TOKEN,
+
   // Only print logs for uploading source maps in CI
   silent: !process.env.CI,
+
+  // Prevent failing the entire build if Sentry source map upload fails (e.g. missing SENTRY_AUTH_TOKEN in Vercel)
+  errorHandler: (err) => {
+    console.warn("Sentry CLI warning (continuing build):", err.message);
+  },
 
   // For all available options, see:
   // https://docs.sentry.io/platforms/javascript/guides/nextjs/manual-setup/
