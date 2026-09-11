@@ -1,0 +1,10 @@
+export const DEFAULT_SEARCH_RADIUS_METERS = 5000;
+export const DEBOUNCE_SEARCH_MS = 300;
+export const TOUCH_TARGET_MIN_PX = 48;
+export const DEFAULT_PAGE_SIZE = 50;
+export const DEFAULT_WHATSAPP_PHONE = "529841000000";
+export const ISR_REVALIDATE_SECONDS = 3600;
+export const SITEMAP_REVALIDATE_SECONDS = 21600;
+export const STORAGE_SAVED_EVENTS_KEY = "hoyba_saved_events";
+export const DEFAULT_TIMEZONE = "America/Cancun";
+export const DEFAULT_LANGUAGE = "en";
