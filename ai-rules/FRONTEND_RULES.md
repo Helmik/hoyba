@@ -59,7 +59,16 @@ Every frontend file, component, hook, and style generated MUST strictly adhere t
 
   export type EventCategoryType = typeof EventCategory[keyof typeof EventCategory];
 
-  Explicit Component Props: Every component MUST explicitly define its props contract:
+- **Explicit Component Props:** Every component MUST explicitly define its props contract:
+  ```typescript
+  interface EventCardProps {
+    readonly event: EventRow;
+    readonly locale: SupportedLocale;
+    readonly onBookmark?: (id: string) => void;
+  }
+  ```
+
+---
 
 ## 5. Security, Typings & Telemetry Architecture (Zero-Resource Degradation)
 
@@ -89,3 +98,54 @@ Every frontend file, component, hook, and style generated MUST strictly adhere t
   - Always attach diagnostic context (such as the `section` tag, active `locale`, and sanitized metadata) to facilitate rapid triage without leaking sensitive user credentials.
   - Maintain both the root `app/global-error.tsx` and localized `app/[locale]/error.tsx` error boundaries fully wired to report unexpected render exceptions to Sentry.
   - Ensure Sentry's tunnel route (e.g., `/monitoring`) is excluded from any internationalization middleware redirects.
+
+---
+
+## 6. Cross-Browser Compatibility (Chrome, Safari, Firefox/Mozilla)
+Every frontend component and user interaction MUST render and function consistently across all major browsers: **Google Chrome** (Blink), **Apple Safari** (WebKit on macOS & iOS), and **Mozilla Firefox** (Gecko).
+
+### A. Form Resilience & Native Validation Overrides
+- **Disable Native HTML5 Validation Tooltips (`noValidate`):**
+  - Never rely on browser-native validation bubbles or tooltips (e.g., WebKit/Safari frequently fails to display validation bubbles, silently blocks form submission, or flags valid modern TLDs/subdomains with false positives).
+  - Always add `noValidate` to `<form>` tags and handle validation using accessible React UI state (`role="alert"`, inline error text, red outline borders).
+- **Strict Input Attributes for Cross-Browser Consistency:**
+  - Explicitly declare input keyboard and predictive attributes on text/email fields:
+    ```tsx
+    <input
+      type="email"
+      inputMode="email"
+      autoComplete="username"
+      autoCapitalize="none"
+      autoCorrect="off"
+      spellCheck={false}
+      required
+    />
+    ```
+  - Use `autoComplete="username"` for primary email inputs to ensure seamless compatibility with Safari Keychain, Chrome Autofill, and Firefox Lockwise.
+
+### B. Invisible Character & Autofill Sanitization
+- **Safari Autofill Sanitization:**
+  - WebKit and iOS virtual keyboards often inject zero-width spaces (`\u200B-\u200D\uFEFF`), non-breaking spaces (`\u00A0`), or trailing spaces when accepting predictive text or autofilling credentials.
+  - Always sanitize text and email inputs both before client submission and within server-side `Zod` schemas:
+    ```typescript
+    const cleanEmail = (val: unknown): string => {
+      if (typeof val !== "string") return "";
+      return val
+        .replace(/[\u200B-\u200D\uFEFF\u00A0]/g, "")
+        .trim()
+        .toLowerCase();
+    };
+    ```
+
+### C. Layout & Viewport Consistency (WebKit & Gecko)
+- **Dynamic Viewport Height (`dvh`):**
+  - Always use `min-h-dvh` / `h-dvh` instead of `vh` to prevent layout clipping when Safari's or Chrome's mobile URL bar expands or contracts.
+- **Scrollbar & Overflow Normalization:**
+  - When hiding scrollbars, apply multi-engine rules covering Gecko (`scrollbar-width: none`), legacy Trident/Edge (`-ms-overflow-style: none`), and WebKit (`::-webkit-scrollbar { display: none }`).
+- **Touch & Click Responsiveness:**
+  - Include `-webkit-tap-highlight-color: transparent;` on interactive touch elements to prevent gray tap flashes in Safari iOS.
+
+### D. Deterministic Date & Time Formatting (Zero Hydration Mismatch)
+- **Engine-Independent Internationalization:**
+  - Never invoke raw `Date.toLocaleDateString()` or `Date.toLocaleTimeString()` directly in Client Components without locale locking, as V8 (Chrome), JavaScriptCore (Safari), and SpiderMonkey (Firefox) format dates with minor whitespace and punctuation differences that trigger React hydration errors.
+  - Always format dates and times through `next-intl` (`useFormatter()`, `format.dateTime()`) with explicit locale snapshots.
