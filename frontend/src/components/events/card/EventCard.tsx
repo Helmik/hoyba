@@ -5,6 +5,7 @@ import { useTranslations } from "next-intl";
 import { Bookmark, Check } from "lucide-react";
 import type { EventCardProps } from "@/types/events";
 import { STORAGE_SAVED_EVENTS_KEY } from "@/constants/config";
+import { analytics } from "@/lib/analytics";
 import EventCardCover from "./EventCardCover";
 import EventCardMeta from "./EventCardMeta";
 import EventCardAction from "./EventCardAction";
@@ -30,6 +31,7 @@ export default function EventCard({
   }, [event.id]);
 
   const toggleSave = () => {
+    const nextSaved = !isSaved;
     try {
       const raw = localStorage.getItem(STORAGE_SAVED_EVENTS_KEY);
       let ids: string[] = raw ? JSON.parse(raw) : [];
@@ -42,8 +44,13 @@ export default function EventCard({
       }
       localStorage.setItem(STORAGE_SAVED_EVENTS_KEY, JSON.stringify(ids));
     } catch {
-      setIsSaved(!isSaved);
+      setIsSaved(nextSaved);
     }
+    analytics.bookmarkToggle({
+      eventId: event.id,
+      category: event.category,
+      isSaved: nextSaved,
+    });
   };
 
   const displayTitle =
@@ -111,7 +118,10 @@ export default function EventCard({
 
         {/* 3. Priority WhatsApp Action Button */}
         <EventCardAction
+          eventId={event.id}
           eventTitle={displayTitle}
+          price={event.price}
+          currency={event.currency}
           whatsappPhone={event.whatsappPhone}
         />
       </div>

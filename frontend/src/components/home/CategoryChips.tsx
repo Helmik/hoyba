@@ -2,6 +2,7 @@
 
 import { useTranslations } from "next-intl";
 import { EventCategory, type EventCategoryType } from "@/types/events";
+import { analytics } from "@/lib/analytics";
 
 const CHIP_LIST: readonly EventCategoryType[] = [
   EventCategory.ALL,
@@ -31,7 +32,10 @@ export default function CategoryChips({
             <button
               key={chip}
               type="button"
-              onClick={() => onSelectCategory(chip)}
+              onClick={() => {
+                onSelectCategory(chip);
+                analytics.categoryFilter(chip);
+              }}
               className={`min-h-[40px] rounded-full px-4 py-2 text-xs font-semibold tracking-wide transition-all duration-150 active:scale-[0.98] ${
                 isActive
                   ? "bg-emerald-700 text-white shadow-lg shadow-emerald-950/40 border border-emerald-500/50 scale-[1.02]"

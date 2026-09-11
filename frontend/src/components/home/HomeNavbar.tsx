@@ -6,6 +6,7 @@ import { usePathname, useRouter } from "@/i18n/routing";
 import { Compass, Globe, Map, List, ChevronDown } from "lucide-react";
 import type { SupportedLocale } from "@/types/i18n";
 import UserNavButton from "@/features/auth/components/UserNavButton";
+import { analytics } from "@/lib/analytics";
 
 interface HomeNavbarProps {
   readonly viewMode: "list" | "map";
@@ -35,7 +36,14 @@ export default function HomeNavbar({ viewMode, onToggleView }: HomeNavbarProps) 
 
   const handleLocaleSelect = (newLocale: SupportedLocale) => {
     setLangMenuOpen(false);
+    analytics.languageChange({ from: locale, to: newLocale });
     router.replace(pathname, { locale: newLocale });
+  };
+
+  const handleToggleView = () => {
+    const nextMode = viewMode === "list" ? "map" : "list";
+    analytics.viewModeToggle(nextMode);
+    onToggleView();
   };
 
   const currentConfig = LANGUAGE_LABELS[locale] || LANGUAGE_LABELS.es;
@@ -64,7 +72,7 @@ export default function HomeNavbar({ viewMode, onToggleView }: HomeNavbarProps) 
           {/* Toggle List / Map Button */}
           <button
             type="button"
-            onClick={onToggleView}
+            onClick={handleToggleView}
             aria-label={viewMode === "list" ? tHome("switchToMap") : tHome("switchToList")}
             className="flex min-h-[40px] items-center gap-1.5 rounded-full border border-slate-800 bg-slate-900/90 px-3.5 py-1.5 text-xs font-semibold text-slate-200 transition-all active:scale-[0.98] hover:border-amber-500/50 hover:text-white"
           >

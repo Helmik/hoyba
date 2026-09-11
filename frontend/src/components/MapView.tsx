@@ -4,6 +4,7 @@ import { useEffect, useRef } from "react";
 import L from "leaflet";
 import type { EventViewModel } from "@/types/events";
 import { useLocale } from "next-intl";
+import { analytics } from "@/lib/analytics";
 
 interface MapViewProps {
   events: (EventViewModel | any)[];
@@ -98,6 +99,12 @@ export default function MapView({ events }: MapViewProps) {
           "Event";
 
         const marker = L.marker([lat, lng], { icon: customIcon }).addTo(map);
+        marker.on("click", () => {
+          analytics.mapMarkerClick({
+            eventId: event.id,
+            category: event.category,
+          });
+        });
         marker.bindPopup(`
           <div style="padding: 4px; font-family: sans-serif; min-width: 160px;">
             <p style="margin: 0 0 4px 0; font-size: 11px; text-transform: uppercase; font-weight: 700; color: #f59e0b;">

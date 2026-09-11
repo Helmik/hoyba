@@ -8,6 +8,7 @@ import { createClient } from "@/lib/supabase/client";
 import { signOutAction } from "../actions/auth.actions";
 import type { SupportedLocale } from "@/types/i18n";
 import { ROUTES } from "@/constants/routes";
+import { analytics } from "@/lib/analytics";
 import type { User as SupabaseUser } from "@supabase/supabase-js";
 
 interface UserNavButtonProps {
@@ -133,6 +134,7 @@ export default function UserNavButton({ locale }: UserNavButtonProps) {
               type="button"
               onClick={() => {
                 setMenuOpen(false);
+                analytics.authSubmit({ type: "signout", locale });
                 signOutAction(locale);
               }}
               className="flex min-h-[44px] w-full items-center gap-2 rounded-xl px-3 text-left text-xs font-semibold text-rose-400 hover:bg-rose-500/10 transition-colors"

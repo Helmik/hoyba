@@ -11,6 +11,7 @@ import type { SupportedLocale } from "@/types/i18n";
 import { ROUTES } from "@/constants/routes";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import { captureAppError } from "@/lib/error";
 
 export interface AuthActionResult {
   success: boolean;
@@ -49,6 +50,11 @@ export async function signInAction(
   });
 
   if (error) {
+    captureAppError(error, {
+      section: "auth_signin",
+      tags: { locale },
+      extra: { email: parsed.data.email },
+    });
     return {
       success: false,
       error: error.message,
@@ -116,6 +122,11 @@ export async function signUpAction(
   });
 
   if (error) {
+    captureAppError(error, {
+      section: "auth_signup",
+      tags: { locale },
+      extra: { email: parsed.data.email },
+    });
     return {
       success: false,
       error: error.message,
@@ -166,6 +177,10 @@ export async function forgotPasswordAction(
   });
 
   if (error) {
+    captureAppError(error, {
+      section: "auth_forgot_password",
+      tags: { locale },
+    });
     return {
       success: false,
       error: error.message,
@@ -207,6 +222,10 @@ export async function resetPasswordAction(
   });
 
   if (error) {
+    captureAppError(error, {
+      section: "auth_reset_password",
+      tags: { locale },
+    });
     return {
       success: false,
       error: error.message,

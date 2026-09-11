@@ -77,3 +77,15 @@ Every frontend file, component, hook, and style generated MUST strictly adhere t
   export type EventInsert = Database['public']['Tables']['events']['Insert'];
   export type EventUpdate = Database['public']['Tables']['events']['Update'];
   export type ProfileRow = Database['public']['Tables']['profiles']['Row'];
+  ```
+
+### C. Mandatory Telemetry & Error Tracking (Vercel Analytics & Sentry)
+- **Mandatory Vercel Analytics Integration:**
+  - The root layout (`app/[locale]/layout.tsx`) MUST always render the `<Analytics />` component from `@vercel/analytics/next`.
+  - Every interactive component featuring user engagements, conversions, or discovery mechanisms (e.g., WhatsApp booking clicks, bookmarks/saves, category chips, zone selectors, search inputs, view mode toggles, language switchers, and auth form submissions) MUST instrument tracking events through the centralized helper (`@/lib/analytics`).
+  - Never log analytics or high-frequency telemetry events directly to PostgreSQL or Supabase to prevent connection pool exhaustion and disk saturation.
+- **Mandatory Sentry Error Logging:**
+  - All catch blocks across Server Components (RSC data fetching), Server Actions (`auth.actions.ts`), Route Handlers (`callback/route.ts`), and client-side boundaries MUST explicitly capture exceptions via Sentry (`captureAppError` from `@/lib/error` or `Sentry.captureException`).
+  - Always attach diagnostic context (such as the `section` tag, active `locale`, and sanitized metadata) to facilitate rapid triage without leaking sensitive user credentials.
+  - Maintain both the root `app/global-error.tsx` and localized `app/[locale]/error.tsx` error boundaries fully wired to report unexpected render exceptions to Sentry.
+  - Ensure Sentry's tunnel route (e.g., `/monitoring`) is excluded from any internationalization middleware redirects.

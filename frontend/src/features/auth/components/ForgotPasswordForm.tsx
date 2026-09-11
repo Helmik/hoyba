@@ -7,6 +7,7 @@ import { Mail, AlertCircle, CheckCircle2, Loader2, ArrowLeft } from "lucide-reac
 import { forgotPasswordAction, type AuthActionResult } from "../actions/auth.actions";
 import type { SupportedLocale } from "@/types/i18n";
 import { ROUTES } from "@/constants/routes";
+import { analytics } from "@/lib/analytics";
 
 interface ForgotPasswordFormProps {
   readonly locale: SupportedLocale;
@@ -48,7 +49,11 @@ export default function ForgotPasswordForm({
   }
 
   return (
-    <form action={formAction} className="space-y-4">
+    <form
+      action={formAction}
+      onSubmit={() => analytics.authSubmit({ type: "forgot_password", locale })}
+      className="space-y-4"
+    >
       <input type="hidden" name="locale" value={locale} />
 
       {/* Error Message */}

@@ -1,13 +1,20 @@
 import { useTranslations } from "next-intl";
 import { DEFAULT_WHATSAPP_PHONE } from "@/constants/config";
+import { analytics } from "@/lib/analytics";
 
 interface EventCardActionProps {
+  readonly eventId?: string;
   readonly eventTitle: string;
+  readonly price?: number;
+  readonly currency?: string;
   readonly whatsappPhone?: string;
 }
 
 export default function EventCardAction({
+  eventId = "",
   eventTitle,
+  price = 0,
+  currency = "USD",
   whatsappPhone = DEFAULT_WHATSAPP_PHONE,
 }: EventCardActionProps) {
   const tEvents = useTranslations("events");
@@ -21,6 +28,14 @@ export default function EventCardAction({
         href={waUrl}
         target="_blank"
         rel="noopener noreferrer"
+        onClick={() => {
+          analytics.whatsappClick({
+            eventId,
+            eventTitle,
+            price,
+            currency,
+          });
+        }}
         className="flex min-h-[44px] w-full items-center justify-center gap-2 rounded-xl bg-[#25D366] hover:bg-[#20ba59] active:scale-[0.98] px-4 py-2.5 text-xs font-extrabold text-white shadow-md shadow-[#25D366]/25 transition-transform duration-100"
       >
         <svg

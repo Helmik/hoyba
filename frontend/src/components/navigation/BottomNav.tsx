@@ -2,6 +2,7 @@
 
 import { useTranslations } from "next-intl";
 import { Calendar, Map, Star } from "lucide-react";
+import { analytics } from "@/lib/analytics";
 
 export type BottomNavTab = "agenda" | "map" | "saved";
 
@@ -51,7 +52,10 @@ export default function BottomNav({
             <button
               key={item.id}
               type="button"
-              onClick={() => onSelectTab(item.id)}
+              onClick={() => {
+                onSelectTab(item.id);
+                analytics.navTabChange(item.id);
+              }}
               aria-label={item.label}
               className={`relative flex min-h-[48px] flex-1 flex-col items-center justify-center py-2 transition-transform duration-100 active:scale-95 ${
                 isActive

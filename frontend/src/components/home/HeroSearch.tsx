@@ -5,6 +5,7 @@ import { Search, Calendar, MapPin } from "lucide-react";
 import { TulumZone, type TulumZoneType } from "@/types/zones";
 import type { SupportedLocale } from "@/types/i18n";
 import { formatContextualDate } from "@/lib/date";
+import { analytics } from "@/lib/analytics";
 
 interface HeroSearchProps {
   readonly searchQuery: string;
@@ -53,6 +54,12 @@ export default function HeroSearch({
           type="text"
           value={searchQuery}
           onChange={(e) => onSearchChange(e.target.value)}
+          onBlur={(e) => analytics.searchQuery(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              analytics.searchQuery(searchQuery);
+            }
+          }}
           placeholder={tHome("searchPlaceholder")}
           className="w-full h-12 md:h-13 rounded-2xl border border-slate-800 bg-slate-900/90 pl-12 pr-4 text-sm text-slate-100 placeholder:text-slate-400 transition-all focus:border-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-500/20"
         />
@@ -71,7 +78,10 @@ export default function HeroSearch({
               <button
                 key={zone}
                 type="button"
-                onClick={() => onZoneSelect(zone)}
+                onClick={() => {
+                  onZoneSelect(zone);
+                  analytics.zoneFilter(zone);
+                }}
                 className={`min-h-[38px] rounded-full px-3.5 py-1.5 text-xs font-semibold transition-all active:scale-[0.98] ${
                   isActive
                     ? "bg-amber-500 text-slate-950 font-bold shadow-md shadow-amber-500/20 scale-[1.02]"

@@ -6,6 +6,7 @@ import { useTranslations } from "next-intl";
 import { Lock, Eye, EyeOff, AlertCircle, Loader2 } from "lucide-react";
 import { resetPasswordAction, type AuthActionResult } from "../actions/auth.actions";
 import type { SupportedLocale } from "@/types/i18n";
+import { analytics } from "@/lib/analytics";
 
 interface ResetPasswordFormProps {
   readonly locale: SupportedLocale;
@@ -31,7 +32,11 @@ export default function ResetPasswordForm({
   }, [state, router]);
 
   return (
-    <form action={formAction} className="space-y-4">
+    <form
+      action={formAction}
+      onSubmit={() => analytics.authSubmit({ type: "reset_password", locale })}
+      className="space-y-4"
+    >
       <input type="hidden" name="locale" value={locale} />
 
       {/* Error Alert */}

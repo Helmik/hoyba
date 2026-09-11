@@ -2,6 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 import { NextResponse, type NextRequest } from "next/server";
 import { ROUTES } from "@/constants/routes";
 import type { SupportedLocale } from "@/types/i18n";
+import { captureAppError } from "@/lib/error";
 
 export async function GET(
   request: NextRequest,
@@ -19,6 +20,11 @@ export async function GET(
     if (!error) {
       return NextResponse.redirect(new URL(next, request.url));
     }
+
+    captureAppError(error, {
+      section: "auth_pkce_callback",
+      tags: { locale },
+    });
   }
 
   // If exchange failed or code was missing, return to login with error

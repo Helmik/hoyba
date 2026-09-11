@@ -8,6 +8,7 @@ import { User, Mail, Lock, Eye, EyeOff, AlertCircle, CheckCircle2, Loader2 } fro
 import { signUpAction, type AuthActionResult } from "../actions/auth.actions";
 import type { SupportedLocale } from "@/types/i18n";
 import { ROUTES } from "@/constants/routes";
+import { analytics } from "@/lib/analytics";
 
 interface SignupFormProps {
   readonly locale: SupportedLocale;
@@ -56,7 +57,11 @@ export default function SignupForm({ locale }: SignupFormProps) {
   }
 
   return (
-    <form action={formAction} className="space-y-3.5">
+    <form
+      action={formAction}
+      onSubmit={() => analytics.authSubmit({ type: "signup", locale })}
+      className="space-y-3.5"
+    >
       <input type="hidden" name="locale" value={locale} />
 
       {/* Error Alert */}

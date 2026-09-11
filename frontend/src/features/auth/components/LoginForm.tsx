@@ -8,6 +8,7 @@ import { Mail, Lock, Eye, EyeOff, AlertCircle, Loader2 } from "lucide-react";
 import { signInAction, type AuthActionResult } from "../actions/auth.actions";
 import type { SupportedLocale } from "@/types/i18n";
 import { ROUTES } from "@/constants/routes";
+import { analytics } from "@/lib/analytics";
 
 interface LoginFormProps {
   readonly locale: SupportedLocale;
@@ -35,7 +36,11 @@ export default function LoginForm({
   }, [state, router]);
 
   return (
-    <form action={formAction} className="space-y-4">
+    <form
+      action={formAction}
+      onSubmit={() => analytics.authSubmit({ type: "login", locale })}
+      className="space-y-4"
+    >
       <input type="hidden" name="locale" value={locale} />
 
       {/* Query Message / Alert */}

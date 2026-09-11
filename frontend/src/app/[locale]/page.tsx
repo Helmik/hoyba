@@ -3,6 +3,7 @@ import { createPublicClient } from "@/lib/supabase/public";
 import HomeClientContainer from "@/components/home/HomeClientContainer";
 import type { EventViewModel } from "@/types/events";
 import type { SupportedLocale } from "@/types/i18n";
+import { captureAppError } from "@/lib/error";
 import {
   ISR_REVALIDATE_SECONDS,
   DEFAULT_PAGE_SIZE,
@@ -53,6 +54,7 @@ export default async function HomePage({
     }
   } catch (err) {
     console.error("Error fetching events from Supabase in RSC HomePage:", err);
+    captureAppError(err, { section: "home_events_fetch", tags: { locale } });
   }
 
   // Fallback high-fidelity mock events for initial empty state or offline dev
