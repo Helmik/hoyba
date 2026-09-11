@@ -1,14 +1,31 @@
 import { z } from "zod";
 
+/**
+ * Sanitizes email inputs by stripping zero-width spaces, non-breaking spaces
+ * (frequently injected by iOS/Safari autofill), trimming and converting to lowercase.
+ */
+export const cleanEmail = (val: unknown): string => {
+  if (typeof val !== "string") return "";
+  return val
+    .replace(/[\u200B-\u200D\uFEFF\u00A0]/g, "")
+    .trim()
+    .toLowerCase();
+};
+
+export const emailValidator = z
+  .string()
+  .transform(cleanEmail)
+  .pipe(z.string().email("Invalid email address"));
+
 export const LoginSchema = z.object({
-  email: z.string().trim().email("Invalid email address"),
-  password: z.string().min(8, "Password must be at least 8 characters"),
+  email: emailValidator,
+  password: z.string().min(1, "Password is required"),
 });
 
 export const SignupSchema = z
   .object({
     fullName: z.string().trim().min(2, "Full name must be at least 2 characters"),
-    email: z.string().trim().email("Invalid email address"),
+    email: emailValidator,
     password: z.string().min(8, "Password must be at least 8 characters"),
     confirmPassword: z.string().min(8, "Password must be at least 8 characters"),
   })
@@ -18,7 +35,7 @@ export const SignupSchema = z
   });
 
 export const ForgotPasswordSchema = z.object({
-  email: z.string().trim().email("Invalid email address"),
+  email: emailValidator,
 });
 
 export const ResetPasswordSchema = z

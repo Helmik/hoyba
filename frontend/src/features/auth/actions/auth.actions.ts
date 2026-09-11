@@ -20,6 +20,31 @@ export interface AuthActionResult {
   redirectTo?: string;
 }
 
+function localizeAuthError(errorMessage: string, locale: SupportedLocale): string {
+  const isEs = locale === "es";
+  const lower = errorMessage.toLowerCase();
+
+  if (lower.includes("invalid login credentials")) {
+    return isEs ? "Correo o contraseña incorrectos" : "Invalid email or password";
+  }
+  if (lower.includes("email not confirmed")) {
+    return isEs ? "Por favor confirma tu correo electrónico antes de ingresar" : "Please confirm your email before signing in";
+  }
+  if (lower.includes("invalid email")) {
+    return isEs ? "Introduce un correo electrónico válido" : "Invalid email address";
+  }
+  if (lower.includes("user already registered")) {
+    return isEs ? "Este correo ya está registrado" : "User already registered";
+  }
+  if (lower.includes("password is required")) {
+    return isEs ? "Introduce tu contraseña" : "Password is required";
+  }
+  if (lower.includes("rate limit") || lower.includes("too many requests")) {
+    return isEs ? "Demasiados intentos. Espera unos momentos." : "Too many attempts. Please try again later.";
+  }
+  return errorMessage;
+}
+
 /**
  * Signs in a user with email and password.
  */
@@ -37,9 +62,10 @@ export async function signInAction(
   });
 
   if (!parsed.success) {
+    const issue = parsed.error.issues[0]?.message || "Validation failed";
     return {
       success: false,
-      error: parsed.error.issues[0]?.message || "Validation failed",
+      error: localizeAuthError(issue, locale),
     };
   }
 
@@ -57,7 +83,7 @@ export async function signInAction(
     });
     return {
       success: false,
-      error: error.message,
+      error: localizeAuthError(error.message, locale),
     };
   }
 

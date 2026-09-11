@@ -23,6 +23,8 @@ export default function LoginForm({
   const router = useRouter();
   const [showPassword, setShowPassword] = useState(false);
 
+  const [emailError, setEmailError] = useState<string | null>(null);
+
   const [state, formAction, isPending] = useActionState<
     AuthActionResult | null,
     FormData
@@ -35,10 +37,41 @@ export default function LoginForm({
     }
   }, [state, router]);
 
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    analytics.authSubmit({ type: "login", locale });
+
+    const form = e.currentTarget;
+    const formData = new FormData(form);
+    const rawEmail = (formData.get("email") as string) || "";
+    // Remove zero-width spaces (\u200B-\u200D\uFEFF) and non-breaking spaces (\u00A0) frequently added by Safari/iOS
+    const cleanedEmail = rawEmail.replace(/[\u200B-\u200D\uFEFF\u00A0]/g, "").trim();
+
+    if (!cleanedEmail) {
+      e.preventDefault();
+      setEmailError(locale === "es" ? "Introduce tu correo electrónico" : "Email is required");
+      return;
+    }
+
+    // Standard RFC-compatible regex to avoid Safari false positives
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(cleanedEmail)) {
+      e.preventDefault();
+      setEmailError(
+        locale === "es"
+          ? "Introduce un correo electrónico válido"
+          : "Invalid email address"
+      );
+      return;
+    }
+
+    setEmailError(null);
+  };
+
   return (
     <form
+      noValidate
       action={formAction}
-      onSubmit={() => analytics.authSubmit({ type: "login", locale })}
+      onSubmit={handleSubmit}
       className="space-y-4"
     >
       <input type="hidden" name="locale" value={locale} />
@@ -75,12 +108,27 @@ export default function LoginForm({
             id="login-email"
             name="email"
             type="email"
+            inputMode="email"
             required
-            autoComplete="email"
+            autoComplete="username"
+            autoCapitalize="none"
+            autoCorrect="off"
+            spellCheck={false}
+            onChange={() => setEmailError(null)}
             placeholder={t("emailPlaceholder")}
-            className="w-full rounded-2xl border border-slate-800 bg-slate-950/70 py-3 pl-10 pr-4 text-xs font-medium text-slate-100 placeholder-slate-500 outline-none transition-all focus:border-amber-500/80 focus:ring-2 focus:ring-amber-500/20"
+            className={`w-full rounded-2xl border bg-slate-950/70 py-3 pl-10 pr-4 text-xs font-medium text-slate-100 placeholder-slate-500 outline-none transition-all ${
+              emailError
+                ? "border-rose-500/80 focus:border-rose-500 focus:ring-2 focus:ring-rose-500/20"
+                : "border-slate-800 focus:border-amber-500/80 focus:ring-2 focus:ring-amber-500/20"
+            }`}
           />
         </div>
+        {emailError && (
+          <p role="alert" className="flex items-center gap-1.5 text-[11px] font-medium text-rose-400 pt-0.5">
+            <AlertCircle className="h-3 w-3 shrink-0" />
+            <span>{emailError}</span>
+          </p>
+        )}
       </div>
 
       {/* Password Input */}
