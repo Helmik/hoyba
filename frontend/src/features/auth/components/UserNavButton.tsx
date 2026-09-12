@@ -1,173 +1,114 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
-import { User, LogOut, ShieldCheck, ChevronDown, Loader2 } from "lucide-react";
+import { User, ChevronDown } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { signOutAction } from "../actions/auth.actions";
 import type { SupportedLocale } from "@/types/i18n";
 import { ROUTES } from "@/constants/routes";
 import { analytics } from "@/lib/analytics";
-import type { User as SupabaseUser } from "@supabase/supabase-js";
+import { useUserNavData } from "../hooks/useUserNavData";
+import UserNavDropdown from "./UserNavDropdown";
 
 interface UserNavButtonProps {
   readonly locale: SupportedLocale;
 }
 
 export default function UserNavButton({ locale }: UserNavButtonProps) {
-  const t = useTranslations("auth");
+  const tAuth = useTranslations("auth");
   const router = useRouter();
-  const [user, setUser] = useState<SupabaseUser | null>(null);
-  const [profileRole, setProfileRole] = useState<string | null>(null);
+  const { user, setUser, profileRole } = useUserNavData();
   const [menuOpen, setMenuOpen] = useState(false);
   const [isSigningOut, setIsSigningOut] = useState(false);
+
   const menuRef = useRef<HTMLDivElement>(null);
+  const buttonRef = useRef<HTMLButtonElement>(null);
 
-  useEffect(() => {
-    const supabase = createClient();
-
-    // Check active session
-    supabase.auth.getUser().then(({ data: { user } }) => {
-      setUser(user);
-      if (user) {
-        supabase
-          .from("profiles")
-          .select("role, full_name")
-          .eq("id", user.id)
-          .single()
-          .then(({ data }) => {
-            if (data?.role) setProfileRole(data.role);
-          });
-      }
-    });
-
-    // Subscribe to auth state transitions
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user ?? null);
-    });
-
-    return () => {
-      subscription.unsubscribe();
-    };
-  }, []);
-
-  // Close dropdown on outside click
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
       if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
         setMenuOpen(false);
       }
     }
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape" && menuOpen) {
+        setMenuOpen(false);
+        buttonRef.current?.focus();
+      }
+    }
     if (menuOpen) {
       document.addEventListener("mousedown", handleClickOutside);
+      document.addEventListener("keydown", handleKeyDown);
     }
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("keydown", handleKeyDown);
     };
   }, [menuOpen]);
 
-  // Guest State: Sign In Link
-  if (!user) {
-    return (
-      <Link
-        href={ROUTES.LOGIN(locale)}
-        className="flex min-h-[40px] items-center gap-1.5 rounded-full border border-slate-800 bg-slate-900/90 px-3.5 py-1.5 text-xs font-bold text-slate-200 transition-all hover:border-amber-500/50 hover:text-amber-400 active:scale-[0.98]"
-      >
-        <User className="h-3.5 w-3.5 text-amber-400" />
-        <span className="hidden sm:inline">{t("signInButton")}</span>
-      </Link>
-    );
-  }
+  const handleSignOut = async () => {
+    try {
+      setIsSigningOut(true);
+      analytics.authSubmit({ type: "signout", locale });
+      const supabase = createClient();
+      await supabase.auth.signOut();
+      await signOutAction(locale);
+      setUser(null);
+      setMenuOpen(false);
+      router.push(ROUTES.HOME(locale));
+      router.refresh();
+    } finally {
+      setIsSigningOut(false);
+    }
+  };
 
-  // Authenticated State: Avatar & Dropdown
   const userInitials =
-    user.user_metadata?.full_name
-      ?.split(" ")
-      .map((part: string) => part[0])
-      .join("")
-      .slice(0, 2)
-      .toUpperCase() ||
-    user.email?.slice(0, 2).toUpperCase() ||
-    "U";
-
-  const isAdmin = profileRole === "admin";
+    user?.user_metadata?.full_name?.split(" ").map((p: string) => p[0]).join("").slice(0, 2).toUpperCase() ||
+    user?.email?.slice(0, 2).toUpperCase() || "U";
 
   return (
-    <div className="relative" ref={menuRef}>
-      <button
-        type="button"
-        onClick={() => setMenuOpen(!menuOpen)}
-        aria-expanded={menuOpen}
-        aria-haspopup="true"
-        aria-label={t("myAccount")}
-        className="flex min-h-[40px] items-center gap-2 rounded-full border border-slate-800 bg-slate-900/90 py-1 pl-1.5 pr-2.5 text-xs font-semibold text-slate-200 transition-all hover:border-amber-500/50 active:scale-[0.98]"
-      >
-        <div className="flex h-7 w-7 items-center justify-center rounded-full bg-gradient-to-tr from-amber-500 to-amber-300 text-[11px] font-black text-slate-950 shadow-sm">
-          {userInitials}
-        </div>
-        <ChevronDown className="h-3 w-3 text-slate-400" />
-      </button>
+    <div className="flex items-center gap-2">
+      {!user ? (
+        <Link
+          href={ROUTES.LOGIN(locale)}
+          className="flex min-h-[40px] items-center gap-1.5 rounded-full border border-slate-800 bg-slate-900/90 px-3.5 py-1.5 text-xs font-bold text-slate-200 transition-all hover:border-amber-500/50 hover:text-amber-400 active:scale-[0.98]"
+          style={{ WebkitTapHighlightColor: "transparent" }}
+        >
+          <User className="h-3.5 w-3.5 text-amber-400" />
+          <span className="hidden sm:inline">{tAuth("signInButton")}</span>
+        </Link>
+      ) : (
+        <div className="relative" ref={menuRef}>
+          <button
+            ref={buttonRef}
+            type="button"
+            onClick={() => setMenuOpen(!menuOpen)}
+            aria-expanded={menuOpen}
+            aria-haspopup="menu"
+            aria-controls="user-dropdown-menu"
+            aria-label={tAuth("myAccount")}
+            className="flex min-h-[40px] items-center gap-1.5 rounded-full border border-slate-800 bg-slate-900/90 py-1 pl-1.5 pr-2.5 text-xs font-semibold text-slate-200 transition-all hover:border-amber-500/50 active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-amber-500/40"
+            style={{ WebkitTapHighlightColor: "transparent" }}
+          >
+            <div className="flex h-7 w-7 items-center justify-center rounded-full bg-gradient-to-tr from-amber-500 to-amber-300 text-[11px] font-black text-slate-950 shadow-sm">
+              {userInitials}
+            </div>
+            <ChevronDown className={`h-3 w-3 text-slate-400 transition-transform duration-150 ${menuOpen ? "rotate-180" : ""}`} />
+          </button>
 
-      {/* Dropdown Menu */}
-      {menuOpen && (
-        <div className="absolute right-0 top-full mt-2 w-56 rounded-2xl border border-slate-800 bg-slate-950/95 p-2 shadow-2xl backdrop-blur-xl z-50 animate-in fade-in zoom-in-95 duration-100">
-          <div className="border-b border-slate-800/80 px-3 py-2.5">
-            <p className="truncate text-xs font-bold text-white">
-              {user.user_metadata?.full_name || t("myAccount")}
-            </p>
-            <p className="truncate text-[11px] text-slate-400">{user.email}</p>
-            {isAdmin ? (
-              <span className="mt-1.5 inline-flex items-center gap-1 rounded-md bg-amber-500/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-amber-400 border border-amber-500/20">
-                <ShieldCheck className="h-3 w-3" />
-                {t("roleAdmin")}
-              </span>
-            ) : (
-              <span className="mt-1.5 inline-flex items-center rounded-md bg-slate-800 px-2 py-0.5 text-[10px] font-semibold text-slate-300">
-                {t("roleOrganizer")}
-              </span>
-            )}
-          </div>
-
-          <div className="pt-1">
-            <button
-              type="button"
-              disabled={isSigningOut}
-              onClick={async () => {
-                try {
-                  setIsSigningOut(true);
-                  analytics.authSubmit({ type: "signout", locale });
-                  const supabase = createClient();
-                  await supabase.auth.signOut();
-                  await signOutAction(locale);
-                  setUser(null);
-                  setMenuOpen(false);
-                  router.push(ROUTES.HOME(locale));
-                  router.refresh();
-                } catch (err) {
-                  console.error("Failed to sign out:", err);
-                } finally {
-                  setIsSigningOut(false);
-                }
-              }}
-              className="flex min-h-[44px] w-full items-center gap-2 rounded-xl px-3 text-left text-xs font-semibold text-rose-400 hover:bg-rose-500/10 transition-colors disabled:opacity-60"
-            >
-              {isSigningOut ? (
-                <>
-                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                  <span>{t("logout")}...</span>
-                </>
-              ) : (
-                <>
-                  <LogOut className="h-3.5 w-3.5" />
-                  <span>{t("logout")}</span>
-                </>
-              )}
-            </button>
-          </div>
+          {menuOpen && (
+            <UserNavDropdown
+              locale={locale}
+              user={user}
+              isAdmin={profileRole === "admin"}
+              isSigningOut={isSigningOut}
+              onSignOut={handleSignOut}
+              onClose={() => setMenuOpen(false)}
+            />
+          )}
         </div>
       )}
     </div>

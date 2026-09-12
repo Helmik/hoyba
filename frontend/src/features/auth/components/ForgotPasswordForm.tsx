@@ -75,6 +75,7 @@ export default function ForgotPasswordForm({
                 ? `${ROUTES.LOGIN(locale)}?email=${encodeURIComponent(email.trim())}`
                 : ROUTES.LOGIN(locale)
             }
+            prefetch={false}
             className="inline-flex min-h-[44px] items-center gap-2 rounded-2xl border border-slate-700 bg-slate-800/80 px-6 text-xs font-bold text-slate-200 hover:bg-slate-700 transition-colors"
           >
             <ArrowLeft className="h-4 w-4" />
@@ -206,6 +207,7 @@ export default function ForgotPasswordForm({
               ? `${ROUTES.LOGIN(locale)}?email=${encodeURIComponent(email.trim())}`
               : ROUTES.LOGIN(locale)
           }
+          prefetch={false}
           className="inline-flex items-center gap-1.5 font-semibold text-slate-400 hover:text-amber-400 transition-colors"
         >
           <ArrowLeft className="h-3.5 w-3.5" />

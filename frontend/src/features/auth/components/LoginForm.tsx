@@ -158,6 +158,7 @@ export default function LoginForm({
                 ? `${ROUTES.FORGOT_PASSWORD(locale)}?email=${encodeURIComponent(email.trim())}`
                 : ROUTES.FORGOT_PASSWORD(locale)
             }
+            prefetch={false}
             className="text-[11px] font-semibold text-amber-400 hover:text-amber-300 transition-colors"
           >
             {t("forgotPasswordLink")}
@@ -214,6 +215,7 @@ export default function LoginForm({
               ? `${ROUTES.SIGNUP(locale)}?email=${encodeURIComponent(email.trim())}`
               : ROUTES.SIGNUP(locale)
           }
+          prefetch={false}
           className="font-bold text-amber-400 hover:text-amber-300 transition-colors"
         >
           {t("submitSignup")}

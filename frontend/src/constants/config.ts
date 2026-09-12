@@ -8,3 +8,6 @@ export const SITEMAP_REVALIDATE_SECONDS = 21600;
 export const STORAGE_SAVED_EVENTS_KEY = "hoyba_saved_events";
 export const DEFAULT_TIMEZONE = "America/Cancun";
 export const DEFAULT_LANGUAGE = "en";
+export const TULUM_DEFAULT_COORDS = { lat: 20.2114, lng: -87.4654 } as const;
+export const MAX_ACTIVE_EVENTS_PER_BUSINESS = 3;
+export const MAX_EVENT_FLYER_SIZE_MB = 2;

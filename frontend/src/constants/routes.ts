@@ -12,4 +12,9 @@ export const ROUTES = {
   RESET_PASSWORD: (locale: SupportedLocale = "es") => `/${locale}/recuperar-contrasena`,
   RECOVER_PASSWORD: (locale: SupportedLocale = "es") => `/${locale}/recuperar-contrasena`,
   AUTH_CALLBACK: (locale: SupportedLocale = "es") => `/${locale}/callback`,
+  HOST_BUSINESSES: (locale: SupportedLocale = "es") => `/${locale}/host/businesses`,
+  HOST_BUSINESS_NEW: (locale: SupportedLocale = "es") => `/${locale}/host/businesses/new`,
+  HOST_BUSINESS_EDIT: (locale: SupportedLocale = "es", id: string) => `/${locale}/host/businesses/${id}/edit`,
+  HOST_POSTS: (locale: SupportedLocale = "es") => `/${locale}/host/posts`,
+  HOST_POST_NEW: (locale: SupportedLocale = "es") => `/${locale}/host/posts/new`,
 } as const;

@@ -288,6 +288,7 @@ export default function SignupForm({ locale, initialEmail = "" }: SignupFormProp
                   ? `${ROUTES.LOGIN(locale)}?email=${encodeURIComponent(email.trim())}`
                   : ROUTES.LOGIN(locale)
               }
+              prefetch={false}
               className="text-amber-400 font-bold hover:text-amber-300 transition-colors ml-2 shrink-0 underline"
             >
               {t("submitLogin")}
@@ -472,6 +473,7 @@ export default function SignupForm({ locale, initialEmail = "" }: SignupFormProp
               ? `${ROUTES.LOGIN(locale)}?email=${encodeURIComponent(email.trim())}`
               : ROUTES.LOGIN(locale)
           }
+          prefetch={false}
           className="font-bold text-amber-400 hover:text-amber-300 transition-colors"
         >
           {t("submitLogin")}
