@@ -15,7 +15,10 @@ export default function HostTabs({ locale }: HostTabsProps) {
   const tHost = useTranslations("host");
   const pathname = usePathname();
 
-  const isBusinesses = pathname.includes("/host/businesses");
+  const isBusinesses =
+    pathname.includes("/host/businesses") ||
+    pathname.endsWith("/host") ||
+    pathname.endsWith("/host/");
   const isPosts = pathname.includes("/host/posts");
 
   return (
@@ -29,9 +32,9 @@ export default function HostTabs({ locale }: HostTabsProps) {
         role="tab"
         aria-selected={isBusinesses}
         style={{ WebkitTapHighlightColor: "transparent" }}
-        className={`flex min-h-[44px] items-center gap-2 rounded-lg px-4 text-xs font-semibold transition-colors ${
+        className={`flex min-h-[40px] items-center gap-2 rounded-xl px-4 text-xs font-semibold transition-all ${
           isBusinesses
-            ? "bg-slate-800/90 text-amber-400 shadow-inner"
+            ? "bg-slate-800 text-amber-400 border border-slate-700/60 shadow-sm"
             : "text-slate-400 hover:bg-slate-900/60 hover:text-slate-200"
         }`}
       >
@@ -43,9 +46,9 @@ export default function HostTabs({ locale }: HostTabsProps) {
         role="tab"
         aria-selected={isPosts}
         style={{ WebkitTapHighlightColor: "transparent" }}
-        className={`flex min-h-[44px] items-center gap-2 rounded-lg px-4 text-xs font-semibold transition-colors ${
+        className={`flex min-h-[40px] items-center gap-2 rounded-xl px-4 text-xs font-semibold transition-all ${
           isPosts
-            ? "bg-slate-800/90 text-amber-400 shadow-inner"
+            ? "bg-slate-800 text-amber-400 border border-slate-700/60 shadow-sm"
             : "text-slate-400 hover:bg-slate-900/60 hover:text-slate-200"
         }`}
       >

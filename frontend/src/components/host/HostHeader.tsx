@@ -29,7 +29,7 @@ export default function HostHeader({
       className="sticky top-0 z-40 border-b border-slate-800/80 bg-slate-950/90 backdrop-blur-md"
       style={{ WebkitBackdropFilter: "blur(12px)" }}
     >
-      <div className="mx-auto flex w-full max-w-5xl items-center justify-between px-4 py-3 sm:px-6 md:px-8 lg:px-12">
+      <div className="mx-auto flex w-full max-w-7xl items-center justify-between px-4 py-3 sm:px-6">
         <div className="flex items-center gap-3">
           <Link
             href={ROUTES.HOME(locale)}
@@ -70,7 +70,7 @@ export default function HostHeader({
       </div>
 
       {/* Navigation Tabs */}
-      <div className="mx-auto flex w-full max-w-5xl px-4 pb-2 pt-1 sm:px-6 md:px-8 lg:px-12">
+      <div className="mx-auto flex w-full max-w-7xl px-4 pb-2 pt-1 sm:px-6">
         <HostTabs locale={locale} />
       </div>
     </header>
