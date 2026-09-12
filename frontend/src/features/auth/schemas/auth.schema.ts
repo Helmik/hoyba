@@ -22,12 +22,19 @@ export const LoginSchema = z.object({
   password: z.string().min(1, "Password is required"),
 });
 
+export const passwordValidator = z
+  .string()
+  .min(8, "Password must be at least 8 characters")
+  .refine((val) => /[0-9]/.test(val) || /[^A-Za-z0-9]/.test(val), {
+    message: "Password must include at least one number or symbol",
+  });
+
 export const SignupSchema = z
   .object({
     firstName: z.string().trim().min(2, "First name must be at least 2 characters"),
     lastName: z.string().trim().min(2, "Last name must be at least 2 characters"),
     email: emailValidator,
-    password: z.string().min(8, "Password must be at least 8 characters"),
+    password: passwordValidator,
     confirmPassword: z.string().min(8, "Password must be at least 8 characters"),
   })
   .refine((data) => data.password === data.confirmPassword, {
@@ -41,7 +48,7 @@ export const ForgotPasswordSchema = z.object({
 
 export const ResetPasswordSchema = z
   .object({
-    password: z.string().min(8, "Password must be at least 8 characters"),
+    password: passwordValidator,
     confirmPassword: z.string().min(8, "Password must be at least 8 characters"),
   })
   .refine((data) => data.password === data.confirmPassword, {

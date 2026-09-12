@@ -105,6 +105,7 @@
     "firstNameLabel": "Nome(i)",
     "firstNamePlaceholder": "Es. Maya",
     "lastNameLabel": "Cognome(i)",
-    "lastNamePlaceholder": "Es. Rodriguez Gomez"
+    "lastNamePlaceholder": "Es. Rodriguez Gomez",
+    "rateLimitError": "Limite di invio email superato. Per motivi di sicurezza, attendi qualche minuto prima di riprovare."
   }
 }

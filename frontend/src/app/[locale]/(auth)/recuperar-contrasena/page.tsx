@@ -13,12 +13,12 @@ export async function generateMetadata({
   const t = await getTranslations({ locale, namespace: "auth" });
 
   return {
-    title: `${t("resetPasswordTitle")} | Hoyba`,
+    title: `${t("forgotPasswordTitle")} | Hoyba`,
     description: t("resetPasswordSubtitle"),
   };
 }
 
-export default async function ResetPasswordPage({
+export default async function RecuperarContrasenaPage({
   params,
   searchParams,
 }: {
@@ -34,8 +34,12 @@ export default async function ResetPasswordPage({
   return (
     <main className="min-h-dvh flex items-center justify-center p-4 sm:p-6 bg-slate-950 text-slate-100">
       <AuthCard
-        title={t("resetPasswordTitle")}
-        subtitle={t("resetPasswordSubtitle")}
+        title={locale === "es" ? "Recuperar Contraseña" : t("resetPasswordTitle")}
+        subtitle={
+          locale === "es"
+            ? "Crea una nueva contraseña segura para acceder a tu cuenta"
+            : t("resetPasswordSubtitle")
+        }
         locale={locale as SupportedLocale}
         backLabel={t("backToHome")}
       >

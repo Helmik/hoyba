@@ -9,6 +9,7 @@ export const ROUTES = {
   LOGIN: (locale: SupportedLocale = "es") => `/${locale}/login`,
   SIGNUP: (locale: SupportedLocale = "es") => `/${locale}/signup`,
   FORGOT_PASSWORD: (locale: SupportedLocale = "es") => `/${locale}/forgot-password`,
-  RESET_PASSWORD: (locale: SupportedLocale = "es") => `/${locale}/reset-password`,
+  RESET_PASSWORD: (locale: SupportedLocale = "es") => `/${locale}/recuperar-contrasena`,
+  RECOVER_PASSWORD: (locale: SupportedLocale = "es") => `/${locale}/recuperar-contrasena`,
   AUTH_CALLBACK: (locale: SupportedLocale = "es") => `/${locale}/callback`,
 } as const;

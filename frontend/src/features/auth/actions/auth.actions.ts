@@ -37,6 +37,9 @@ function localizeAuthError(errorMessage: string, locale: SupportedLocale): strin
   if (lower.includes("password must be at least 8 characters")) {
     return isEs ? "La contraseña debe tener al menos 8 caracteres" : "Password must be at least 8 characters";
   }
+  if (lower.includes("number or symbol") || lower.includes("número o símbolo")) {
+    return isEs ? "La contraseña debe incluir al menos un número o símbolo" : "Password must include at least one number or symbol";
+  }
   if (lower.includes("invalid login credentials")) {
     return isEs ? "Correo o contraseña incorrectos" : "Invalid email or password";
   }
@@ -58,8 +61,37 @@ function localizeAuthError(errorMessage: string, locale: SupportedLocale): strin
   if (lower.includes("password is required")) {
     return isEs ? "Introduce tu contraseña" : "Password is required";
   }
-  if (lower.includes("rate limit") || lower.includes("too many requests")) {
-    return isEs ? "Demasiados intentos. Espera unos momentos." : "Too many attempts. Please try again later.";
+  if (
+    lower.includes("rate limit") ||
+    lower.includes("too many requests") ||
+    lower.includes("exceeded") ||
+    lower.includes("once every") ||
+    lower.includes("over_email_send_rate_limit")
+  ) {
+    return isEs
+      ? "Has alcanzado el límite de solicitudes de correo. Por seguridad, espera unos minutos antes de intentar de nuevo."
+      : "Email rate limit exceeded. For security reasons, please wait a few minutes before trying again.";
+  }
+  if (
+    lower.includes("token has expired") ||
+    lower.includes("otp_expired") ||
+    lower.includes("session_not_found") ||
+    lower.includes("auth session missing") ||
+    lower.includes("invalid token")
+  ) {
+    return isEs
+      ? "El enlace de recuperación ha expirado o no es válido. Por favor solicita uno nuevo."
+      : "The recovery link has expired or is invalid. Please request a new one.";
+  }
+  if (lower.includes("user not found")) {
+    return isEs
+      ? "No encontramos ninguna cuenta registrada con este correo electrónico."
+      : "No account found with this email address.";
+  }
+  if (lower.includes("new password should be different")) {
+    return isEs
+      ? "La nueva contraseña debe ser diferente a la anterior."
+      : "New password must be different from the old password.";
   }
   return errorMessage;
 }
@@ -256,16 +288,24 @@ export async function forgotPasswordAction(
 
   const parsed = ForgotPasswordSchema.safeParse({ email: rawEmail });
   if (!parsed.success) {
+    const issue = parsed.error.issues[0]?.message || "Invalid email address";
     return {
       success: false,
-      error: parsed.error.issues[0]?.message || "Invalid email address",
+      error: localizeAuthError(issue, locale),
     };
   }
 
   const supabase = await createClient();
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
+  const siteUrl =
+    process.env.NEXT_PUBLIC_SITE_URL ||
+    (process.env.VERCEL_PROJECT_PRODUCTION_URL
+      ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`
+      : process.env.VERCEL_URL
+      ? `https://${process.env.VERCEL_URL}`
+      : "http://localhost:3000");
+
   const resetRedirectUrl = `${siteUrl}${ROUTES.AUTH_CALLBACK(locale)}?type=recovery&next=${encodeURIComponent(
-    ROUTES.RESET_PASSWORD(locale)
+    ROUTES.RECOVER_PASSWORD(locale)
   )}`;
 
   const { error } = await supabase.auth.resetPasswordForEmail(parsed.data.email, {
@@ -279,7 +319,7 @@ export async function forgotPasswordAction(
     });
     return {
       success: false,
-      error: error.message,
+      error: localizeAuthError(error.message, locale),
     };
   }
 
@@ -306,9 +346,10 @@ export async function resetPasswordAction(
   });
 
   if (!parsed.success) {
+    const issue = parsed.error.issues[0]?.message || "Validation failed";
     return {
       success: false,
-      error: parsed.error.issues[0]?.message || "Validation failed",
+      error: localizeAuthError(issue, locale),
     };
   }
 
@@ -324,7 +365,7 @@ export async function resetPasswordAction(
     });
     return {
       success: false,
-      error: error.message,
+      error: localizeAuthError(error.message, locale),
     };
   }
 

@@ -85,7 +85,47 @@ export default function ForgotPasswordForm({
     );
   }
 
-  const displayedError = emailError || state?.error;
+  const formatAuthErrorMessage = (errorStr: string): string => {
+    const isEs = locale === "es";
+    const lower = errorStr.toLowerCase();
+
+    if (
+      lower.includes("rate limit") ||
+      lower.includes("too many requests") ||
+      lower.includes("exceeded") ||
+      lower.includes("once every") ||
+      lower.includes("over_email_send_rate_limit")
+    ) {
+      return t("rateLimitError");
+    }
+
+    if (lower.includes("invalid email") || lower.includes("valid email")) {
+      return isEs
+        ? "Introduce un correo electrónico válido."
+        : "Please enter a valid email address.";
+    }
+
+    if (lower.includes("user not found")) {
+      return isEs
+        ? "No encontramos ninguna cuenta registrada con este correo electrónico."
+        : "No account found with this email address.";
+    }
+
+    if (
+      lower.includes("token has expired") ||
+      lower.includes("otp_expired") ||
+      lower.includes("session_not_found")
+    ) {
+      return isEs
+        ? "El enlace de recuperación ha expirado o no es válido. Por favor solicita uno nuevo."
+        : "The recovery link has expired or is invalid. Please request a new one.";
+    }
+
+    return errorStr;
+  };
+
+  const rawError = emailError || state?.error;
+  const displayedError = rawError ? formatAuthErrorMessage(rawError) : null;
 
   return (
     <form
@@ -100,7 +140,7 @@ export default function ForgotPasswordForm({
       {displayedError && (
         <div
           role="alert"
-          className="flex items-center gap-2 rounded-2xl border border-rose-500/30 bg-rose-500/10 p-3.5 text-xs font-semibold text-rose-400"
+          className="flex items-center gap-2 rounded-2xl border border-rose-500/30 bg-rose-500/10 p-3.5 text-xs font-semibold text-rose-400 leading-relaxed"
         >
           <AlertCircle className="h-4 w-4 shrink-0" />
           <span>{displayedError}</span>

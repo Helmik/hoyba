@@ -105,6 +105,7 @@
     "firstNameLabel": "Imię (imiona)",
     "firstNamePlaceholder": "np. Maya",
     "lastNameLabel": "Nazwisko",
-    "lastNamePlaceholder": "np. Rodriguez Gomez"
+    "lastNamePlaceholder": "np. Rodriguez Gomez",
+    "rateLimitError": "Przekroczono limit wysyłania wiadomości e-mail. Ze względów bezpieczeństwa odczekaj kilka minut przed ponowną próbą."
   }
 }

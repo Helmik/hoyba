@@ -105,6 +105,7 @@
     "firstNameLabel": "First name(s)",
     "firstNamePlaceholder": "e.g. Maya",
     "lastNameLabel": "Last name(s)",
-    "lastNamePlaceholder": "e.g. Rodriguez Gomez"
+    "lastNamePlaceholder": "e.g. Rodriguez Gomez",
+    "rateLimitError": "Email rate limit exceeded. For security reasons, please wait a few minutes before trying again."
   }
 }

@@ -105,6 +105,7 @@
     "firstNameLabel": "Имя",
     "firstNamePlaceholder": "Напр. Майя",
     "lastNameLabel": "Фамилия",
-    "lastNamePlaceholder": "Напр. Родригес"
+    "lastNamePlaceholder": "Напр. Родригес",
+    "rateLimitError": "Превышен лимит запросов на отправку писем. В целях безопасности подождите несколько минут перед повторной попыткой."
   }
 }

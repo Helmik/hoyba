@@ -105,6 +105,7 @@
     "firstNameLabel": "Nombre(s)",
     "firstNamePlaceholder": "Ej. Maya",
     "lastNameLabel": "Apellidos",
-    "lastNamePlaceholder": "Ej. Rodríguez Gómez"
+    "lastNamePlaceholder": "Ej. Rodríguez Gómez",
+    "rateLimitError": "Has alcanzado el límite de solicitudes de correo. Por seguridad, espera unos minutos antes de intentar de nuevo."
   }
 }

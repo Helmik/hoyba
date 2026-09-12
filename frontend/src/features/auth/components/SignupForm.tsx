@@ -18,10 +18,26 @@ interface SignupFormProps {
 export default function SignupForm({ locale, initialEmail = "" }: SignupFormProps) {
   const t = useTranslations("auth");
   const router = useRouter();
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [email, setEmail] = useState(initialEmail);
   const [clientError, setClientError] = useState<string | null>(null);
   const [emailError, setEmailError] = useState<string | null>(null);
+
+  // Real-time validations identical to password recovery
+  const hasMinLength = password.length >= 8;
+  const hasNumberOrSymbol =
+    /[0-9]/.test(password) || /[^A-Za-z0-9]/.test(password);
+  const passwordsMatch =
+    confirmPassword.length > 0 && password === confirmPassword;
+
+  const strengthScore = [
+    hasMinLength,
+    hasNumberOrSymbol,
+    password.length >= 12,
+  ].filter(Boolean).length;
 
   useEffect(() => {
     if (initialEmail) {
@@ -72,8 +88,6 @@ export default function SignupForm({ locale, initialEmail = "" }: SignupFormProp
     const rawEmail = ((formData.get("email") as string) || "")
       .replace(/[\u200B-\u200D\uFEFF\u00A0]/g, "")
       .trim();
-    const password = (formData.get("password") as string) || "";
-    const confirmPassword = (formData.get("confirmPassword") as string) || "";
 
     if (firstName.length < 2) {
       e.preventDefault();
@@ -94,15 +108,33 @@ export default function SignupForm({ locale, initialEmail = "" }: SignupFormProp
       return;
     }
 
-    if (password.length < 8) {
+    if (!hasMinLength) {
       e.preventDefault();
-      setClientError(locale === "es" ? "La contraseña debe tener al menos 8 caracteres" : "Password must be at least 8 characters");
+      setClientError(
+        locale === "es"
+          ? "La contraseña debe tener al menos 8 caracteres."
+          : "Password must be at least 8 characters."
+      );
+      return;
+    }
+
+    if (!hasNumberOrSymbol) {
+      e.preventDefault();
+      setClientError(
+        locale === "es"
+          ? "La contraseña debe incluir al menos un número o símbolo."
+          : "Password must include at least one number or symbol."
+      );
       return;
     }
 
     if (password !== confirmPassword) {
       e.preventDefault();
-      setClientError(locale === "es" ? "Las contraseñas no coinciden" : "Passwords do not match");
+      setClientError(
+        locale === "es"
+          ? "Las contraseñas no coinciden."
+          : "Passwords do not match."
+      );
       return;
     }
 
@@ -280,6 +312,14 @@ export default function SignupForm({ locale, initialEmail = "" }: SignupFormProp
             type={showPassword ? "text" : "password"}
             required
             autoComplete="new-password"
+            autoCapitalize="none"
+            autoCorrect="off"
+            spellCheck={false}
+            value={password}
+            onChange={(e) => {
+              setPassword(e.target.value);
+              setClientError(null);
+            }}
             placeholder={t("passwordPlaceholder")}
             className="w-full rounded-2xl border border-slate-800 bg-slate-950/70 py-3 pl-10 pr-10 text-xs font-medium text-slate-100 placeholder-slate-500 outline-none transition-all focus:border-amber-500/80 focus:ring-2 focus:ring-amber-500/20"
           />
@@ -296,6 +336,29 @@ export default function SignupForm({ locale, initialEmail = "" }: SignupFormProp
             )}
           </button>
         </div>
+
+        {/* Strength Meter */}
+        {password.length > 0 && (
+          <div className="pt-1.5 space-y-1.5">
+            <div className="flex gap-1.5 h-1 w-full">
+              <div
+                className={`h-full flex-1 rounded-full transition-all ${
+                  strengthScore >= 1 ? "bg-amber-500" : "bg-slate-800"
+                }`}
+              />
+              <div
+                className={`h-full flex-1 rounded-full transition-all ${
+                  strengthScore >= 2 ? "bg-amber-400" : "bg-slate-800"
+                }`}
+              />
+              <div
+                className={`h-full flex-1 rounded-full transition-all ${
+                  strengthScore >= 3 ? "bg-emerald-400" : "bg-slate-800"
+                }`}
+              />
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Confirm Password Input */}
@@ -311,20 +374,84 @@ export default function SignupForm({ locale, initialEmail = "" }: SignupFormProp
           <input
             id="signup-confirmPassword"
             name="confirmPassword"
-            type={showPassword ? "text" : "password"}
+            type={showConfirmPassword ? "text" : "password"}
             required
             autoComplete="new-password"
+            autoCapitalize="none"
+            autoCorrect="off"
+            spellCheck={false}
+            value={confirmPassword}
+            onChange={(e) => {
+              setConfirmPassword(e.target.value);
+              setClientError(null);
+            }}
             placeholder={t("confirmPasswordPlaceholder")}
-            className="w-full rounded-2xl border border-slate-800 bg-slate-950/70 py-3 pl-10 pr-4 text-xs font-medium text-slate-100 placeholder-slate-500 outline-none transition-all focus:border-amber-500/80 focus:ring-2 focus:ring-amber-500/20"
+            className={`w-full rounded-2xl border bg-slate-950/70 py-3 pl-10 pr-10 text-xs font-medium text-slate-100 placeholder-slate-500 outline-none transition-all ${
+              confirmPassword.length > 0 && !passwordsMatch
+                ? "border-rose-500/80 focus:border-rose-500 focus:ring-2 focus:ring-rose-500/20"
+                : "border-slate-800 focus:border-amber-500/80 focus:ring-2 focus:ring-amber-500/20"
+            }`}
           />
+          <button
+            type="button"
+            onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+            aria-label="Toggle confirm password visibility"
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300 p-1"
+          >
+            {showConfirmPassword ? (
+              <EyeOff className="h-4 w-4" />
+            ) : (
+              <Eye className="h-4 w-4" />
+            )}
+          </button>
+        </div>
+      </div>
+
+      {/* Requirements checklist */}
+      <div className="space-y-1 rounded-xl bg-slate-950/40 border border-slate-900 p-3 text-[11px]">
+        <div
+          className={`flex items-center gap-1.5 ${
+            hasMinLength ? "text-emerald-400" : "text-slate-500"
+          }`}
+        >
+          <CheckCircle2 className="h-3 w-3 shrink-0" />
+          <span>
+            {locale === "es"
+              ? "Mínimo 8 caracteres"
+              : "At least 8 characters"}
+          </span>
+        </div>
+        <div
+          className={`flex items-center gap-1.5 ${
+            hasNumberOrSymbol ? "text-emerald-400" : "text-slate-500"
+          }`}
+        >
+          <CheckCircle2 className="h-3 w-3 shrink-0" />
+          <span>
+            {locale === "es"
+              ? "Incluye número o símbolo"
+              : "Includes a number or symbol"}
+          </span>
+        </div>
+        <div
+          className={`flex items-center gap-1.5 ${
+            passwordsMatch ? "text-emerald-400" : "text-slate-500"
+          }`}
+        >
+          <CheckCircle2 className="h-3 w-3 shrink-0" />
+          <span>
+            {locale === "es"
+              ? "Las contraseñas coinciden"
+              : "Passwords match"}
+          </span>
         </div>
       </div>
 
       {/* Submit Button */}
       <button
         type="submit"
-        disabled={isPending}
-        className="flex min-h-[48px] w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-amber-500 to-amber-400 px-4 py-3 text-xs font-black uppercase tracking-wider text-slate-950 shadow-lg shadow-amber-500/20 transition-all hover:brightness-105 active:scale-[0.98] disabled:opacity-60"
+        disabled={isPending || !hasMinLength || !hasNumberOrSymbol || !passwordsMatch}
+        className="flex min-h-[48px] w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-amber-500 to-amber-400 px-4 py-3 text-xs font-black uppercase tracking-wider text-slate-950 shadow-lg shadow-amber-500/20 transition-all hover:brightness-105 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
       >
         {isPending ? (
           <>

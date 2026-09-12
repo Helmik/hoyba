@@ -105,6 +105,7 @@
     "firstNameLabel": "Vorname(n)",
     "firstNamePlaceholder": "z.B. Maya",
     "lastNameLabel": "Nachname(n)",
-    "lastNamePlaceholder": "z.B. Rodriguez Gomez"
+    "lastNamePlaceholder": "z.B. Rodriguez Gomez",
+    "rateLimitError": "E-Mail-Anfragelimit überschritten. Bitte warten Sie aus Sicherheitsgründen einige Minuten, bevor Sie es erneut versuchen."
   }
 }

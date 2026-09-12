@@ -105,6 +105,7 @@
     "firstNameLabel": "Voornaam(en)",
     "firstNamePlaceholder": "bijv. Maya",
     "lastNameLabel": "Achternaam(-namen)",
-    "lastNamePlaceholder": "bijv. Rodriguez Gomez"
+    "lastNamePlaceholder": "bijv. Rodriguez Gomez",
+    "rateLimitError": "E-maillimiet overschreden. Wacht om veiligheidsredenen een paar minuten voordat u het opnieuw probeert."
   }
 }
